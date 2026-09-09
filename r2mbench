@@ -1,0 +1,699 @@
+#!/usr/bin/env bash
+# ============================================================
+# r2mbench -- standalone environment setup & verification for the
+# full_eval NMR benchmark.
+#
+# Makes full_eval/ self-contained: third-party CODE is vendored into
+# full_eval/third_party/, model WEIGHTS are referenced at external paths,
+# and one fresh conda env provides the runtime for all metric families.
+#
+# Subcommands:
+#   setup     Create the conda env, install deps, vendor third-party code,
+#             and generate run_config.local.conf.  (default)
+#   doctor    Validate the env, every path/weight, and import all backends.
+#   verify    Tiny GPU smoke over appearance/scene_identity/geometric/object.
+#   all       setup -> doctor -> verify.
+#
+# Everything is overridable via R2MBENCH_* environment variables (see below).
+# Run `bash r2mbench --help` for the full list.
+# ============================================================
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ---- Tunables (env overridable) --------------------------------------------
+# A plain NAMED conda env (conda create -n). Its location follows the user's own
+# conda `envs_dirs`, so we ASK conda where it landed instead of assuming a path.
+ENV_NAME="${R2MBENCH_ENV_NAME:-r2mbench}"
+PY_VERSION="${R2MBENCH_PY_VERSION:-3.10}"
+CONDA_BIN="$(command -v conda 2>/dev/null || echo conda)"
+_resolve_env_prefix() {
+    # Capture conda output first, then parse: piping into `awk ... exit` would
+    # SIGPIPE conda and trip `set -o pipefail`.
+    local list
+    list="$("${CONDA_BIN}" env list 2>/dev/null)" || return 0
+    awk -v n="${ENV_NAME}" '$1==n{print $NF; exit}' <<< "${list}"
+}
+# Fast self-hosted domestic PyPI mirror. The torch 2.6.0 linux wheel here IS the
+# cu124 build, so no throttled download.pytorch.org CDN is needed.
+PIP_INDEX="${R2MBENCH_PIP_INDEX:-https://pypi.tuna.tsinghua.edu.cn/simple}"
+
+# --- Model WEIGHTS: external bytes, INTERNAL paths --------------------------
+# Weights are not committed (too large) but are referenced by INTERNAL paths under
+# full_eval/checkpoints/. Populate that directory once by copying OR symlinking your
+# weight files into it (see README §7). No external absolute paths are baked in.
+# Override the root or any single file via env vars if your weights live elsewhere.
+CKPT_ROOT="${R2MBENCH_CKPT_ROOT:-${SCRIPT_DIR}/checkpoints}"
+TORCH_HOME_DIR="${R2MBENCH_TORCH_HOME:-${CKPT_ROOT}/torch_hub}"
+CLIP_CKPT="${R2MBENCH_CLIP_CKPT:-${CKPT_ROOT}/ViT-B-32.pt}"
+BOQ_CKPT="${R2MBENCH_BOQ_CKPT:-${CKPT_ROOT}/dinov2_12288.pth}"
+MUTUALVPR_CKPT="${R2MBENCH_MUTUALVPR_CKPT:-${CKPT_ROOT}/MutualVPR_model_512.pth}"
+GDINO_CKPT="${R2MBENCH_GDINO_CKPT:-${CKPT_ROOT}/groundingdino_swint_ogc.pth}"
+SAM2_CKPT="${R2MBENCH_SAM2_CKPT:-${CKPT_ROOT}/sam2.1_hiera_large.pt}"
+
+# --- Vendoring SOURCES (maintainer-only, NO external defaults) ---------------
+# Used ONLY by `r2mbench vendor` to (re)populate third_party/ from source. There
+# are NO baked-in paths: set these env vars only if you ever need to re-vendor
+# from your own checkouts. `setup`/`doctor`/`verify`/eval never read them.
+SRC_BOQ="${R2MBENCH_SRC_BOQ:-}"
+SRC_MUTUALVPR="${R2MBENCH_SRC_MUTUALVPR:-}"
+SRC_LIGHTGLUE="${R2MBENCH_SRC_LIGHTGLUE:-}"
+SRC_GDINO="${R2MBENCH_SRC_GROUNDINGDINO:-}"
+SRC_SAM2="${R2MBENCH_SRC_SAM2:-}"
+CLIP_PKG_SRC="${R2MBENCH_CLIP_PKG_SRC:-}"
+
+# VLM API (persistent_state family only). Supply your own key/endpoint via
+# R2MBENCH_API_KEY / R2MBENCH_API_URL, or edit the generated config afterwards.
+API_KEY_VAL="${R2MBENCH_API_KEY:-}"
+API_URL_VAL="${R2MBENCH_API_URL:-}"
+
+# Smoke defaults (verify is optional; targets the shipped sample task below).
+VERIFY_TASK="${R2MBENCH_VERIFY_TASK:-ModelA_DDDAAA_30s}"
+VERIFY_GPU="${R2MBENCH_VERIFY_GPU:-0}"
+VERIFY_PAIRS="${R2MBENCH_VERIFY_PAIRS:-5}"
+VERIFY_SHARDS="${R2MBENCH_VERIFY_SHARDS:-50}"   # shard 0 of N -> ~ (videos/N) clips
+
+# ---- Derived paths ---------------------------------------------------------
+THIRDPARTY_DIR="${SCRIPT_DIR}/third_party"
+CONFIG_OUT="${SCRIPT_DIR}/run_config.local.conf"
+REQ_FILE="${SCRIPT_DIR}/requirements.txt"
+ENV_PREFIX="$(_resolve_env_prefix)"
+if [[ -n "${ENV_PREFIX}" ]]; then
+    ENV_PY="${ENV_PREFIX}/bin/python"; ENV_PIP="${ENV_PREFIX}/bin/pip"
+else
+    ENV_PY="/nonexistent/bin/python"; ENV_PIP="/nonexistent/bin/pip"
+fi
+
+BOQ_ROOT="${THIRDPARTY_DIR}/Bag-of-Queries"
+MUTUALVPR_ROOT="${THIRDPARTY_DIR}/MutualVPR"
+LIGHTGLUE_ROOT="${THIRDPARTY_DIR}/LightGlue"
+GDINO_ROOT="${THIRDPARTY_DIR}/GroundingDINO"
+SAM2_ROOT="${THIRDPARTY_DIR}/sam2"
+CLIP_ROOT="${THIRDPARTY_DIR}/clip"   # vendored openai/CLIP package (import via THIRDPARTY_DIR on PYTHONPATH)
+GDINO_CONFIG="${GDINO_ROOT}/groundingdino/config/GroundingDINO_SwinT_OGC.py"
+SAM2_CONFIG="${SAM2_ROOT}/sam2/configs/sam2.1/sam2.1_hiera_l.yaml"
+
+# ---- Pretty logging --------------------------------------------------------
+c_reset=$'\033[0m'; c_grn=$'\033[32m'; c_red=$'\033[31m'; c_yel=$'\033[33m'; c_blu=$'\033[36m'
+log()  { printf '%s[r2mbench]%s %s\n' "$c_blu" "$c_reset" "$*"; }
+ok()   { printf '%s  [ok]%s   %s\n' "$c_grn" "$c_reset" "$*"; }
+warn() { printf '%s  [warn]%s %s\n' "$c_yel" "$c_reset" "$*"; }
+die()  { printf '%s  [err]%s  %s\n' "$c_red" "$c_reset" "$*" >&2; exit 1; }
+hr()   { printf '============================================================\n'; }
+
+# ============================================================
+# conda discovery
+# ============================================================
+find_conda_sh() {
+    local base
+    if [[ -n "${CONDA_EXE:-}" ]]; then
+        base="$(dirname "$(dirname "${CONDA_EXE}")")"
+    elif command -v conda >/dev/null 2>&1; then
+        base="$(conda info --base 2>/dev/null)"
+    else
+        base="/opt/conda"
+    fi
+    echo "${base}/etc/profile.d/conda.sh"
+}
+
+# ============================================================
+# setup
+# ============================================================
+create_env() {
+    hr; log "Creating conda env '${ENV_NAME}' (python ${PY_VERSION})"
+    if [[ -x "${ENV_PY}" && -z "${R2MBENCH_FORCE:-}" ]]; then
+        ok "env '${ENV_NAME}' already exists at ${ENV_PREFIX}"
+    else
+        # Plain named env; conda places it per the user's own envs_dirs.
+        conda create -y -n "${ENV_NAME}" "python=${PY_VERSION}"
+        ENV_PREFIX="$(_resolve_env_prefix)"
+        [[ -n "${ENV_PREFIX}" && -x "${ENV_PREFIX}/bin/python" ]] \
+            || die "conda env '${ENV_NAME}' not found after create (conda env list)"
+        ENV_PY="${ENV_PREFIX}/bin/python"; ENV_PIP="${ENV_PREFIX}/bin/pip"
+        ok "conda env created at ${ENV_PREFIX}"
+    fi
+
+    hr; log "Installing pip requirements (index: ${PIP_INDEX})"
+    # openai/CLIP is NOT pip-installed: it is vendored into third_party/clip and
+    # imported via PYTHONPATH. Its runtime deps (ftfy/regex) are in requirements.
+    # Strip any git+ / --extra-index-url lines so the install stays mirror-only.
+    local filtered; filtered="$(mktemp)"
+    grep -vE '^\s*(git\+|--extra-index-url)' "${REQ_FILE}" > "${filtered}"
+    "${ENV_PIP}" install --index-url "${PIP_INDEX}" -r "${filtered}"
+    rm -f "${filtered}"
+    ok "pip requirements installed"
+}
+
+ensure_thirdparty() {
+    # setup/doctor/verify use ONLY the internal third_party/. This verifies it is
+    # populated; it never reaches out to external code sources.
+    hr; log "Checking internal third-party code in ${THIRDPARTY_DIR}"
+    local d missing=()
+    for d in Bag-of-Queries MutualVPR LightGlue GroundingDINO sam2 clip; do
+        if [[ -d "${THIRDPARTY_DIR}/${d}" ]]; then
+            ok "  present: third_party/${d}"
+        else
+            missing+=("${d}")
+        fi
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        warn "missing internal third-party code: ${missing[*]}"
+        die "run 'bash r2mbench vendor' once to populate third_party/ from source (maintainer bootstrap)."
+    fi
+    ok "all third-party code is internal (third_party/)"
+}
+
+vendor_one() {
+    # vendor_one <src> <dest> <envvar>  -- copy code, drop VCS/weights/notebooks.
+    # Uses tar (rsync is not always available) and preserves compiled *.so.
+    local src="$1" dest="$2" var="${3:-}"
+    [[ -n "${src}" ]] || die "vendoring source not set${var:+ (set ${var})} for $(basename "${dest}")"
+    [[ -d "${src}" ]] || die "vendoring source missing: ${src}${var:+ (set ${var})}"
+    log "  vendoring $(basename "${dest}")  <-  ${src}"
+    rm -rf "${dest}"; mkdir -p "${dest}"
+    ( cd "${src}" && tar \
+        --exclude='./.git' --exclude='./.github' \
+        --exclude='*.pth' --exclude='*.pt' --exclude='*.ckpt' \
+        --exclude='*.ipynb' \
+        --exclude='__pycache__' --exclude='*.egg-info' \
+        -cf - . ) | ( cd "${dest}" && tar -xf - )
+}
+
+vendor_thirdparty() {
+    # Maintainer bootstrap: (re)populate third_party/ from external SOURCES.
+    # Only `r2mbench vendor` calls this; normal setup uses the internal copy.
+    hr; log "Vendoring third-party code into ${THIRDPARTY_DIR} (from external sources)"
+    mkdir -p "${THIRDPARTY_DIR}"
+    vendor_one "${SRC_BOQ}"        "${BOQ_ROOT}"       R2MBENCH_SRC_BOQ
+    vendor_one "${SRC_MUTUALVPR}"  "${MUTUALVPR_ROOT}" R2MBENCH_SRC_MUTUALVPR
+    vendor_one "${SRC_LIGHTGLUE}"  "${LIGHTGLUE_ROOT}" R2MBENCH_SRC_LIGHTGLUE
+    vendor_one "${SRC_GDINO}"      "${GDINO_ROOT}"     R2MBENCH_SRC_GROUNDINGDINO
+    vendor_one "${SRC_SAM2}"       "${SAM2_ROOT}"      R2MBENCH_SRC_SAM2
+    # openai/CLIP is a plain package dir (no repo); copy it directly.
+    [[ -n "${CLIP_PKG_SRC}" ]] || die "clip source not set (set R2MBENCH_CLIP_PKG_SRC)"
+    [[ -d "${CLIP_PKG_SRC}" ]] || die "clip source missing: ${CLIP_PKG_SRC}"
+    log "  vendoring clip  <-  ${CLIP_PKG_SRC}"
+    rm -rf "${CLIP_ROOT}"; mkdir -p "${CLIP_ROOT}"
+    ( cd "${CLIP_PKG_SRC}" && tar --exclude='__pycache__' -cf - . ) | ( cd "${CLIP_ROOT}" && tar -xf - )
+    # Keep prebuilt CUDA extensions (ABI matches py3.10 + torch2.6+cu124).
+    ok "third-party code vendored (incl. clip)"
+    log "  prebuilt CUDA extensions present:"
+    find "${GDINO_ROOT}" "${SAM2_ROOT}" -name '*.so' -printf '    %p\n' 2>/dev/null || true
+}
+
+_cuda_ver() {
+    # Echo "major.minor" for an nvcc path, or nothing if unavailable.
+    local nvcc="$1" out
+    [[ -x "${nvcc}" ]] || return 0
+    out="$("${nvcc}" --version 2>/dev/null)" || return 0
+    [[ "${out}" =~ release[[:space:]]+([0-9]+\.[0-9]+) ]] && printf '%s' "${BASH_REMATCH[1]}"
+    return 0
+}
+
+selftest_object_op() {
+    # Functionally exercise the GroundingDINO CUDA op (MultiScaleDeformableAttention)
+    # exactly as eval does. This is the real proof that the compiled _C.so runs on
+    # THIS driver: a toolchain mismatch (e.g. nvcc newer than the driver's max CUDA)
+    # surfaces here as a launch/PTX error instead of silently returning all zeros.
+    # Returns 0 if the op runs (or if there is genuinely no CUDA device to test on).
+    [[ -x "${ENV_PY}" ]] || return 1
+    export_runtime_env
+    local out
+    out="$("${ENV_PY}" - <<'PY' 2>&1
+import sys, torch
+try:
+    from groundingdino import _C
+except Exception as e:
+    print("SELFTEST_IMPORT_FAIL:", repr(e)); sys.exit(0)
+if not torch.cuda.is_available():
+    print("SELFTEST_SKIP: no CUDA device"); sys.exit(0)
+try:
+    dev = "cuda"
+    shapes = torch.tensor([[8, 8], [4, 4]], dtype=torch.long, device=dev)
+    lvl = torch.tensor([0, 64], dtype=torch.long, device=dev)
+    nk = int((shapes[:, 0] * shapes[:, 1]).sum())
+    value = torch.rand(1, nk, 8, 32, device=dev)
+    loc = torch.rand(1, 5, 8, 2, 4, 2, device=dev)
+    attn = torch.rand(1, 5, 8, 2, 4, device=dev)
+    o = _C.ms_deform_attn_forward(value, shapes, lvl, loc, attn, 1)
+    torch.cuda.synchronize()
+    assert o.shape[0] == 1
+    print("SELFTEST_OK")
+except Exception as e:
+    print("SELFTEST_OP_FAIL:", repr(e))
+PY
+)" || true
+    if grep -qE "SELFTEST_OK|SELFTEST_SKIP" <<< "${out}"; then
+        return 0
+    fi
+    printf '%s\n' "${out}" | sed 's/^/    [selftest] /'
+    return 1
+}
+
+install_matched_conda_toolkit() {
+    # Last resort: when the compiled op will not run on this driver, install an
+    # nvcc whose version == torch's CUDA build (guaranteed runnable, since torch
+    # itself runs) and force a rebuild against it. conda is the only reliable
+    # source of a full nvcc -- the pip nvidia-cuda-nvcc-cu12 wheel ships ptxas but
+    # NOT the nvcc driver. Opt out with R2MBENCH_CUDA_NO_CONDA=1.
+    local torch_cuda
+    torch_cuda="$("${ENV_PY}" -c 'import torch; print(torch.version.cuda or "")' 2>/dev/null || true)"
+    [[ -z "${torch_cuda}" ]] && { warn "torch has no CUDA build; cannot pick a matched toolkit"; return 1; }
+    log "Installing a driver-matched CUDA toolkit via conda (cuda-nvcc=${torch_cuda}) — may take a few minutes..."
+    # cuda-libraries-dev pulls the math-library dev headers (cusparse.h, cublas.h,
+    # cusolver.h, ...) that torch's include chain (ATen/cuda/CUDAContextLight.h)
+    # needs; cuda-nvcc + cuda-cudart-dev alone are NOT enough to compile.
+    "${CONDA_BIN}" install -y -p "${ENV_PREFIX}" -c nvidia \
+        "cuda-version=${torch_cuda}" "cuda-nvcc=${torch_cuda}" \
+        "cuda-cudart-dev=${torch_cuda}" "cuda-libraries-dev=${torch_cuda}" \
+        || { warn "conda toolchain install failed"; return 1; }
+    local env_ver; env_ver="$(_cuda_ver "${ENV_PREFIX}/bin/nvcc")"
+    [[ "${env_ver}" == "${torch_cuda}" ]] || { warn "conda nvcc is ${env_ver:-none}, expected ${torch_cuda}"; return 1; }
+    export CUDA_HOME="${ENV_PREFIX}"
+    export PATH="${ENV_PREFIX}/bin:${PATH}"
+    local h; h="$(find "${ENV_PREFIX}" -name cuda_runtime_api.h -path '*/include/*' 2>/dev/null | head -1 || true)"
+    [[ -n "${h}" ]] && export CPATH="$(dirname "${h}"):${CPATH:-}"
+    # Drop the stale .so so setuptools actually rebuilds against the matched nvcc.
+    rm -f "${GDINO_ROOT}"/groundingdino/_C*.so "${SAM2_ROOT}"/sam2/_C*.so 2>/dev/null || true
+    ok "installed matched CUDA toolkit (nvcc ${env_ver}); CUDA_HOME=${ENV_PREFIX}"
+    return 0
+}
+
+build_and_verify_cuda_ops() {
+    # Compile the GroundingDINO / sam2 CUDA extensions with whatever nvcc is
+    # available (the system toolkit by default), then FUNCTIONALLY self-test the
+    # object op. If it runs, we are done regardless of the nvcc version. Only if
+    # the op fails on this driver do we install a version-matched toolkit and
+    # rebuild once. This makes "setup passed" imply "object actually runs".
+    export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
+    install_compiled
+    if selftest_object_op; then
+        ok "GroundingDINO CUDA op runs on this driver (object family ready)"
+        return 0
+    fi
+    hr; warn "the GroundingDINO CUDA op did not run with the current toolchain."
+    if [[ "${R2MBENCH_CUDA_NO_CONDA:-}" == "1" ]]; then
+        warn "  R2MBENCH_CUDA_NO_CONDA=1 set; not attempting a matched conda toolkit."
+    elif install_matched_conda_toolkit; then
+        install_compiled
+        if selftest_object_op; then
+            ok "GroundingDINO CUDA op runs after installing a matched CUDA toolkit"
+            return 0
+        fi
+    fi
+    warn "  'object' metrics will error or read all-zero on this machine;"
+    warn "  the other four families (appearance/scene_identity/geometric/persistent_state) are unaffected."
+    warn "  to fix: install a CUDA toolkit whose version <= the driver's max CUDA, then: bash r2mbench setup"
+    return 0
+}
+
+install_compiled() {
+    # Best-effort: compile GroundingDINO / sam2 from source into the env.
+    # The vendored prebuilt _C.so + PYTHONPATH are the guaranteed fallback,
+    # so a compile failure here is non-fatal.
+    hr; log "Building GroundingDINO / sam2 extensions (best-effort)"
+    export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
+    mkdir -p "${SCRIPT_DIR}/logs"
+    local repo name clog
+    for repo in "${GDINO_ROOT}" "${SAM2_ROOT}"; do
+        name="$(basename "${repo}")"
+        clog="${SCRIPT_DIR}/logs/compile_${name}.log"
+        log "  pip install -e ${name}  (full log: ${clog})"
+        if "${ENV_PIP}" install --index-url "${PIP_INDEX}" \
+              --no-build-isolation -e "${repo}" > "${clog}" 2>&1; then
+            ok "${name} installed (compiled from source)"
+        else
+            warn "${name} compile/install failed — see ${clog} for the error"
+            warn "  (object metrics require the GroundingDINO CUDA op; a missing/broken"
+            warn "   _C.so will make 'object' error out or read all-zero)"
+        fi
+    done
+}
+
+write_config() {
+    hr; log "Writing ${CONFIG_OUT}"
+    # Rewrite weight/torch-home paths relative to CHECKPOINT_ROOT / SCRIPT_DIR so
+    # the config stays relocatable and contains NO external absolute paths.
+    _relcfg() {
+        local p="$1"
+        case "$p" in
+            "${CKPT_ROOT}"/*)   printf '${CHECKPOINT_ROOT}/%s' "${p#"${CKPT_ROOT}"/}" ;;
+            "${CKPT_ROOT}")     printf '${CHECKPOINT_ROOT}' ;;
+            "${SCRIPT_DIR}"/*)  printf '${SCRIPT_DIR}/%s' "${p#"${SCRIPT_DIR}"/}" ;;
+            *)                  printf '%s' "$p" ;;
+        esac
+    }
+    local ckpt_root_cfg torch_home_cfg clip_cfg boq_cfg mvpr_cfg gdino_cfg sam2_cfg
+    # CHECKPOINT_ROOT and TORCH_HOME: relativize against SCRIPT_DIR only. TORCH_HOME
+    # is emitted BEFORE the CHECKPOINT_ROOT line in the config, so it must NOT refer
+    # to ${CHECKPOINT_ROOT} (which run_full_eval only expands once its line is read).
+    case "${CKPT_ROOT}" in
+        "${SCRIPT_DIR}"/*) ckpt_root_cfg='${SCRIPT_DIR}/'"${CKPT_ROOT#"${SCRIPT_DIR}"/}" ;;
+        *)                 ckpt_root_cfg="${CKPT_ROOT}" ;;
+    esac
+    case "${TORCH_HOME_DIR}" in
+        "${SCRIPT_DIR}"/*) torch_home_cfg='${SCRIPT_DIR}/'"${TORCH_HOME_DIR#"${SCRIPT_DIR}"/}" ;;
+        *)                 torch_home_cfg="${TORCH_HOME_DIR}" ;;
+    esac
+    clip_cfg="$(_relcfg "${CLIP_CKPT}")"
+    boq_cfg="$(_relcfg "${BOQ_CKPT}")"
+    mvpr_cfg="$(_relcfg "${MUTUALVPR_CKPT}")"
+    gdino_cfg="$(_relcfg "${GDINO_CKPT}")"
+    sam2_cfg="$(_relcfg "${SAM2_CKPT}")"
+    cat > "${CONFIG_OUT}" <<EOF
+# Auto-generated by r2mbench. Standalone full_eval config.
+# Consume via: bash scripts/run_full_eval.sh --config run_config.local.conf ...
+#
+# Third-party CODE is vendored under \${SCRIPT_DIR}/third_party (relocatable, internal).
+# Model WEIGHTS live under \${SCRIPT_DIR}/checkpoints (populate by copy or symlink;
+# see README §7). No external absolute paths are baked in.
+
+METRICS_ARG=all
+GPU_LIST=0,1,2,3
+TASK_FILTER=
+NUM_VIDEO_SHARDS=10
+
+# Runtime: single fresh conda env for both GPU metrics and the VLM family.
+WORLD_SCORE_ENV=${ENV_PREFIX}
+GEMINI_PYTHON=${ENV_PREFIX}/bin/python3
+
+TORCH_HOME=${torch_home_cfg}
+HF_ENDPOINT=https://hf-mirror.com
+USE_TF=0
+USE_TORCH=1
+TRANSFORMERS_NO_TF=1
+
+# Vendored third-party code roots (internal).
+MEM_BENCH_THIRDPARTY_ROOT=\${SCRIPT_DIR}/third_party
+BOQ_ROOT=\${SCRIPT_DIR}/third_party/Bag-of-Queries
+MUTUALVPR_ROOT=\${SCRIPT_DIR}/third_party/MutualVPR
+LIGHTGLUE_ROOT=\${SCRIPT_DIR}/third_party/LightGlue
+GROUNDINGDINO_ROOT=\${SCRIPT_DIR}/third_party/GroundingDINO
+SAM2_ROOT=\${SCRIPT_DIR}/third_party/sam2
+
+# Model weights (internal paths under checkpoints/; bytes may be symlinks).
+CHECKPOINT_ROOT=${ckpt_root_cfg}
+CLIP_CKPT=${clip_cfg}
+BOQ_CHECKPOINT=${boq_cfg}
+MUTUALVPR_CHECKPOINT=${mvpr_cfg}
+GROUNDINGDINO_CONFIG=\${GROUNDINGDINO_ROOT}/groundingdino/config/GroundingDINO_SwinT_OGC.py
+GROUNDINGDINO_CKPT=${gdino_cfg}
+SAM2_CONFIG=\${SAM2_ROOT}/sam2/configs/sam2.1/sam2.1_hiera_l.yaml
+SAM2_CKPT=${sam2_cfg}
+
+# VLM API (persistent_state family only).
+API_KEY=${API_KEY_VAL}
+API_URL=${API_URL_VAL}
+
+NMR_RESULT_BASE=\${SCRIPT_DIR}/results/nmr
+
+# ---- Tasks --------------------------------------------------------------
+# One TASK per model x trajectory:  TASK=<name>|<video_dir>|<pose_json>
+# EDIT the <video_dir> paths below to point at YOUR generated videos (README
+# Step 1). The pose_json uses the reference trajectories shipped in this repo;
+# prefer the exact pose you fed to the model. Task names are only used for the
+# results folder and the --tasks filter.
+MODEL_NAME=mymodel
+TRAJECTORY_DIR=\${SCRIPT_DIR}/trajectories
+
+TASK=\${MODEL_NAME}_DDDAAA_30s|/path/to/your_videos/DDDAAA|\${TRAJECTORY_DIR}/trajectory_DDDAAA_30s.json
+TASK=\${MODEL_NAME}_WSLRRLL_30s|/path/to/your_videos/WSLRRLL|\${TRAJECTORY_DIR}/trajectory_WSLRRLL_30s.json
+TASK=\${MODEL_NAME}_revisit_loop_30s|/path/to/your_videos/revisit_loop|\${TRAJECTORY_DIR}/trajectory_revisit_loop_30s.json
+
+# Runnable example backed by the sample video shipped in sample_data/. Lets you
+# smoke-test without generating videos:  bash r2mbench verify
+TASK=ModelA_DDDAAA_30s|\${SCRIPT_DIR}/sample_data/ModelA_DDDAAA|\${TRAJECTORY_DIR}/trajectory_DDDAAA_30s.json
+EOF
+    ok "config written"
+}
+
+cmd_setup() {
+    [[ "${R2MBENCH_SKIP_ENV:-}" == "1" ]]        || create_env
+    ensure_thirdparty
+    [[ "${R2MBENCH_SKIP_THIRDPARTY:-}" == "1" ]] || build_and_verify_cuda_ops
+    write_config
+    hr; ok "setup complete"
+    log "next: bash r2mbench doctor    # validate the environment (no videos needed)"
+    log "      bash r2mbench verify    # OPTIONAL end-to-end smoke (needs generated videos)"
+}
+
+cmd_vendor() {
+    # Maintainer bootstrap: (re)populate third_party/ from external code sources.
+    # Not needed for normal use -- the shipped full_eval already contains it.
+    vendor_thirdparty
+    hr; ok "vendor complete (third_party/ populated)"
+}
+
+# ============================================================
+# shared runtime environment (used by doctor & verify)
+# ============================================================
+export_runtime_env() {
+    export TORCH_HOME="${TORCH_HOME_DIR}"
+    export HF_ENDPOINT="https://hf-mirror.com"
+    export USE_TF=0 USE_TORCH=1 TRANSFORMERS_NO_TF=1
+    export BOQ_ROOT MUTUALVPR_ROOT LIGHTGLUE_ROOT GROUNDINGDINO_ROOT="${GDINO_ROOT}" SAM2_ROOT
+    export BOQ_CHECKPOINT="${BOQ_CKPT}" MUTUALVPR_CHECKPOINT="${MUTUALVPR_CKPT}"
+    export PYTHONPATH="${GDINO_ROOT}:${SAM2_ROOT}:${THIRDPARTY_DIR}:${SCRIPT_DIR}/src:${SCRIPT_DIR}:${PYTHONPATH:-}"
+    export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
+}
+
+# ============================================================
+# doctor
+# ============================================================
+check_path() { # check_path <label> <path>
+    if [[ -e "$2" ]]; then ok "$1: $2"; else warn "MISSING $1: $2"; DOCTOR_FAIL=1; fi
+}
+
+cmd_doctor() {
+    hr; log "Doctor: validating standalone eval environment"
+    DOCTOR_FAIL=0
+
+    log "-- interpreter --"
+    [[ -x "${ENV_PY}" ]] && ok "env python: ${ENV_PY}" || { warn "MISSING env python: ${ENV_PY}"; DOCTOR_FAIL=1; }
+
+    log "-- vendored third-party code (internal) --"
+    check_path "BoQ boq.py"       "${BOQ_ROOT}/src/boq.py"
+    check_path "MutualVPR pkg"    "${MUTUALVPR_ROOT}/cosplace_model/cosplace_network.py"
+    check_path "LightGlue pkg"    "${LIGHTGLUE_ROOT}/lightglue/__init__.py"
+    check_path "GroundingDINO"    "${GDINO_ROOT}/groundingdino/util/inference.py"
+    check_path "GDINO _C.so"      "$(ls "${GDINO_ROOT}"/groundingdino/_C*.so 2>/dev/null | head -1)"
+    check_path "sam2 pkg"         "${SAM2_ROOT}/sam2/sam2_image_predictor.py"
+    check_path "sam2 _C.so"       "${SAM2_ROOT}/sam2/_C.so"
+    check_path "clip pkg"         "${CLIP_ROOT}/clip.py"
+    check_path "GDINO config"     "${GDINO_CONFIG}"
+    check_path "sam2 config"      "${SAM2_CONFIG}"
+
+    log "-- model weights (internal paths under checkpoints/; populate by copy or symlink) --"
+    check_path "CLIP ckpt"        "${CLIP_CKPT}"
+    check_path "BoQ ckpt"         "${BOQ_CKPT}"
+    check_path "MutualVPR ckpt"   "${MUTUALVPR_CKPT}"
+    check_path "GDINO ckpt"       "${GDINO_CKPT}"
+    check_path "SAM2 ckpt"        "${SAM2_CKPT}"
+    check_path "DINOv2 hub ckpt"  "${TORCH_HOME_DIR}/hub/checkpoints/dinov2_vitb14_pretrain.pth"
+
+    if [[ -x "${ENV_PY}" ]]; then
+        log "-- python imports (in env) --"
+        export_runtime_env
+        if "${ENV_PY}" - <<'PY'
+import importlib, os, sys
+mods = ["torch","torchvision","numpy","cv2","decord","lpips","clip",
+        "scipy","skimage","sklearn","transformers","timm","supervision",
+        "pycocotools","hydra","omegaconf","addict","yapf","ftfy","regex","iopath","cvxpy","kornia"]
+bad = []
+for m in mods:
+    try:
+        importlib.import_module(m)
+    except Exception as e:
+        bad.append(f"{m}: {e}")
+import torch
+print(f"  torch {torch.__version__}  cuda_avail={torch.cuda.is_available()}  n_gpu={torch.cuda.device_count()}")
+# third-party backends via PYTHONPATH / sys.path
+sys.path.insert(0, os.path.join(os.environ["BOQ_ROOT"], "src"))
+sys.path.insert(0, os.environ["MUTUALVPR_ROOT"])
+sys.path.insert(0, os.environ["LIGHTGLUE_ROOT"])
+for stmt, name in [("from boq import BoQ","boq"),
+                   ("from cosplace_model.cosplace_network import MutualVPR","MutualVPR"),
+                   ("from lightglue import LightGlue, SuperPoint","lightglue"),
+                   ("from groundingdino.util.inference import load_model","groundingdino"),
+                   ("from sam2.sam2_image_predictor import SAM2ImagePredictor","sam2")]:
+    try:
+        exec(stmt)
+        print(f"  import ok: {name}")
+    except Exception as e:
+        bad.append(f"{name}: {e}")
+if bad:
+    print("  IMPORT FAILURES:")
+    for b in bad:
+        print("   -", b)
+    sys.exit(1)
+print("  all imports ok")
+PY
+        then
+            ok "python imports ok"
+        else
+            warn "some imports failed (see above)"
+            DOCTOR_FAIL=1
+        fi
+    fi
+
+    hr
+    if [[ "${DOCTOR_FAIL}" == "1" ]]; then
+        warn "doctor found problems (see above)"
+        return 1
+    fi
+    ok "doctor: all checks passed"
+}
+
+# ============================================================
+# verify  (tiny GPU smoke, 4 families, no API cost)
+# ============================================================
+resolve_task() {
+    # Reads TASK= lines from the generated config; echoes "video_dir|pose_json"
+    # for VERIFY_TASK.
+    local model traj video pose name
+    model="mymodel"
+    traj="${SCRIPT_DIR}/trajectories"
+    while IFS= read -r line; do
+        [[ "${line}" == TASK=* ]] || continue
+        line="${line#TASK=}"
+        line="${line//\$\{SCRIPT_DIR\}/${SCRIPT_DIR}}"
+        line="${line//\$\{MODEL_NAME\}/${model}}"
+        line="${line//\$\{TRAJECTORY_DIR\}/${traj}}"
+        IFS='|' read -r name video pose <<< "${line}"
+        if [[ "${name}" == "${VERIFY_TASK}" ]]; then
+            echo "${video}|${pose}"; return 0
+        fi
+    done < "${CONFIG_OUT}"
+    return 1
+}
+
+run_family() {
+    # run_family <family> <extra_args...>
+    local fam="$1"; shift
+    local out="${SCRIPT_DIR}/results/nmr/${fam}/${VERIFY_TASK}/verify_shard0"
+    mkdir -p "${out}"
+    local log="${SCRIPT_DIR}/logs/verify_${fam}.log"
+    log "  [${fam}] running (out: ${out##*/})"
+    if CUDA_VISIBLE_DEVICES="${VERIFY_GPU}" "${ENV_PY}" -u "$@" \
+            --video_dir "${VIDEO_DIR}" --pose_json "${POSE_JSON}" \
+            --output_dir "${out}" --device cuda:0 \
+            --max_eval_pairs "${VERIFY_PAIRS}" \
+            --num_video_shards "${VERIFY_SHARDS}" --video_shard_id 0 \
+            > "${log}" 2>&1; then
+        local njson; njson="$(find "${out}" -name '*.json' | wc -l)"
+        if [[ "${njson}" -gt 0 ]]; then
+            ok "[${fam}] PASS (${njson} result json, log: ${log##*/})"
+            return 0
+        fi
+        warn "[${fam}] ran but produced no json (log: ${log##*/})"
+        return 1
+    fi
+    warn "[${fam}] FAILED (see ${log})"
+    return 1
+}
+
+cmd_verify() {
+    hr; log "Verify: tiny GPU smoke on appearance/scene_identity/geometric/object"
+    [[ -x "${ENV_PY}" ]] || die "env python missing; run 'r2mbench setup' first"
+    [[ -f "${CONFIG_OUT}" ]] || die "config missing; run 'r2mbench setup' first"
+
+    local pair
+    if ! pair="$(resolve_task)"; then
+        warn "verify skipped: task '${VERIFY_TASK}' not found in config."
+        log "  verify is OPTIONAL and needs generated videos (see README Step 1)."
+        return 0
+    fi
+    VIDEO_DIR="${pair%%|*}"; POSE_JSON="${pair##*|}"
+    if [[ ! -d "${VIDEO_DIR}" ]]; then
+        warn "verify skipped: no videos at ${VIDEO_DIR}"
+        log "  verify is OPTIONAL. Generate videos (README Step 1), point a TASK at them,"
+        log "  then run: bash r2mbench verify   (env validation is done by 'r2mbench doctor')."
+        return 0
+    fi
+    [[ -f "${POSE_JSON}" ]] || { warn "verify skipped: pose json missing: ${POSE_JSON}"; return 0; }
+    log "  task=${VERIFY_TASK} gpu=${VERIFY_GPU} pairs=${VERIFY_PAIRS} shard=0/${VERIFY_SHARDS}"
+    log "  video_dir=${VIDEO_DIR}"
+
+    export_runtime_env
+    mkdir -p "${SCRIPT_DIR}/logs"
+
+    local nmr="${SCRIPT_DIR}/src/eval_revisit_nmr.py"
+    local obj="${SCRIPT_DIR}/src/metrics/object_identity.py"
+    local pass=0 total=0 results=()
+
+    for fam in appearance scene_identity geometric; do
+        total=$((total+1))
+        local extra=(--families "${fam}" --clip_checkpoint "${CLIP_CKPT}" --resume)
+        [[ "${fam}" == "appearance" ]] && extra+=(--enable_lpips)
+        if run_family "${fam}" "${nmr}" "${extra[@]}"; then
+            pass=$((pass+1)); results+=("${fam}:PASS")
+        else
+            results+=("${fam}:FAIL")
+        fi
+    done
+
+    total=$((total+1))
+    if run_family "object" "${obj}" --resume \
+            --groundingdino_config "${GDINO_CONFIG}" \
+            --groundingdino_checkpoint "${GDINO_CKPT}" \
+            --sam2_config "${SAM2_CONFIG}" \
+            --sam_checkpoint "${SAM2_CKPT}" \
+            --clip_checkpoint "${CLIP_CKPT}"; then
+        pass=$((pass+1)); results+=("object:PASS")
+    else
+        results+=("object:FAIL")
+    fi
+
+    hr; log "Verify summary: ${pass}/${total} families passed"
+    for r in "${results[@]}"; do
+        [[ "${r}" == *PASS ]] && ok "  ${r}" || warn "  ${r}"
+    done
+    [[ "${pass}" -eq "${total}" ]] || return 1
+    ok "verify: all families passed"
+}
+
+usage() {
+    cat <<EOF
+r2mbench -- standalone environment setup & verification for full_eval
+
+Usage: bash r2mbench [setup|doctor|verify|all|vendor]   (default: setup)
+
+Commands:
+  setup    create conda env, install pip deps, write config (uses internal
+           third_party/ only; never reads external code paths)
+  doctor   validate interpreter, internal code, weights, and all imports
+           (no videos needed -- this is the environment check)
+  all      setup -> doctor
+  verify   OPTIONAL end-to-end GPU smoke on the 4 GPU families; needs generated
+           videos (see README Step 1). Skips gracefully if none are present.
+  vendor   MAINTAINER-ONLY: (re)populate third_party/ from external code sources
+           (SRC_*/CLIP_PKG_SRC). Not needed for normal use -- the shipped
+           full_eval already contains third_party/.
+
+Key R2MBENCH_* env overrides:
+  R2MBENCH_ENV_NAME       conda env name          (default ${ENV_NAME})
+  R2MBENCH_PIP_INDEX      pip index url           (default ${PIP_INDEX})
+  R2MBENCH_FORCE=1        reinstall pip packages even if env exists
+  R2MBENCH_SKIP_ENV=1     skip conda env + pip install (config only)
+  R2MBENCH_SKIP_THIRDPARTY=1  skip the GroundingDINO/sam2 compile step
+  R2MBENCH_SRC_*          external code sources (vendor only)
+  R2MBENCH_*_CKPT, R2MBENCH_TORCH_HOME   external weight paths
+  R2MBENCH_VERIFY_TASK    smoke task name         (default ${VERIFY_TASK})
+  R2MBENCH_VERIFY_GPU     smoke gpu id            (default ${VERIFY_GPU})
+EOF
+}
+
+main() {
+    local cmd="${1:-setup}"
+    case "${cmd}" in
+        setup)  cmd_setup ;;
+        doctor) cmd_doctor ;;
+        verify) cmd_verify ;;
+        vendor) cmd_vendor ;;
+        all)    cmd_setup && cmd_doctor ;;
+        -h|--help|help) usage ;;
+        *) usage; die "unknown command: ${cmd}" ;;
+    esac
+}
+
+main "$@"

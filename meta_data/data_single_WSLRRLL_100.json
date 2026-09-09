@@ -1,0 +1,502 @@
+[
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An open modern plaza at dawn, a single red sculpture in the center, long stone benches, a glass bus stop on the right, a clock tower in the far background, spacious composition, distinct landmarks, recognizable visual anchors, minimal clutter, long sightlines, explorable environment, suitable for camera movement and memory revisit, consistent geometry, cinematic realism",
+    "image": "./generated_imgs/0001.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A nearly empty university campus square, large circular fountain, one bronze statue, symmetrical library building, tall flagpoles, wide paving stones, soft morning light, spacious composition, distinct landmarks, recognizable visual anchors, minimal clutter, long sightlines, explorable environment, suitable for camera movement and memory revisit, realistic atmosphere",
+    "image": "./generated_imgs/0002.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A quiet rooftop parking lot at sunset, yellow painted lines, one white stairwell box, a row of ventilation pipes, distant city skyline, open space, strong visual landmarks, photorealistic, spacious composition, consistent geometry, suitable for camera movement and memory revisit",
+    "image": "./generated_imgs/0003.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A broad pedestrian street after rain, reflective pavement, a green tram stop sign, one street clock, sparse trees in square planters, open sightlines, realistic city atmosphere, distinct landmarks, minimal clutter, suitable for memory revisit",
+    "image": "./generated_imgs/0004.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A large museum courtyard, central black cube installation, shallow reflecting pool, white concrete walls, one narrow staircase, minimal people, spacious and architectural, realistic lighting, clear landmarks, long sightlines",
+    "image": "./generated_imgs/0005.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An empty suburban intersection at blue hour, one gas station canopy, traffic lights, a lone billboard, wide road markings, distant water tower, cinematic suburban realism, open layout, recognizable visual anchors",
+    "image": "./generated_imgs/0006.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A calm waterfront promenade, one lighthouse at the end, metal railings, a row of evenly spaced lamps, a circular map sign, open sky and sea, photorealistic, clean composition, easy spatial orientation",
+    "image": "./generated_imgs/0007.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A spacious train station forecourt, central information pillar, a red ticket machine, glass canopy entrance, patterned pavement, realistic urban design, clear landmarks, broad walkable area",
+    "image": "./generated_imgs/0008.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A quiet financial district plaza on a weekend, giant steel ring sculpture, a rectangular pool, two tall office towers, polished stone ground, open and minimal, cinematic realism, memorable composition",
+    "image": "./generated_imgs/0009.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A large outdoor shopping plaza before opening hours, central kiosk, striped umbrellas folded shut, one digital directory sign, wide tiled walkways, realistic architecture, sparse layout, distinct landmarks",
+    "image": "./generated_imgs/0010.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An old European town square at sunrise, central stone well, a clock on the church tower, one flower cart, cobblestone ground, open square, gentle realistic atmosphere, clear geometry for revisiting",
+    "image": "./generated_imgs/0011.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A spacious harbor loading area, stacks of containers far away, one giant yellow crane, a striped warehouse door, open concrete ground, moody overcast realism, strong environmental identity",
+    "image": "./generated_imgs/0012.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A minimalist corporate courtyard, one bonsai tree in a square planter, shallow water channel, black stone wall, tall glass facade, strong geometric composition, realistic, recognizable visual anchors",
+    "image": "./generated_imgs/0013.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A desert highway rest stop, one vending machine corner, a tall signpost, picnic tables, fuel pumps under a faded canopy, huge open asphalt, harsh midday realism, broad and readable scene",
+    "image": "./generated_imgs/0014.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An empty sports stadium exterior concourse, numbered gates, one giant team banner, security railings, broad concrete ramps, photorealistic wide shot, suitable for camera movement and revisit",
+    "image": "./generated_imgs/0015.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A large airport drop-off zone late at night, blue signage, empty luggage carts, one illuminated pillar, glass facade reflections, spacious lanes, realistic cinematic look, stable perspective cues",
+    "image": "./generated_imgs/0016.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A quiet mountain visitor center plaza, one wooden map board, flagstone paths, a stone monument, pine trees framing the distance, open alpine realism, easy-to-recognize landmarks",
+    "image": "./generated_imgs/0017.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A sparse industrial park courtyard, one orange forklift parked beside a warehouse, painted bay numbers, metal staircase, broad empty pavement, realistic textures, clear spatial orientation",
+    "image": "./generated_imgs/0018.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An open hospital campus garden, circular driveway, one ambulance bay sign, a modern sculpture, trimmed hedges, broad paths, calm realistic lighting, distinct visual anchors",
+    "image": "./generated_imgs/0019.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A large civic center square, central flag mast, wide steps, digital information board, low fountain jets, spacious public architecture, highly readable layout, memory revisit friendly",
+    "image": "./generated_imgs/0020.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A spacious museum hall, one dinosaur skeleton centerpiece, long benches, a large skylight, directional signage, polished floor reflections, open interior, photorealistic, recognizable landmarks",
+    "image": "./generated_imgs/0021.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A nearly empty airport terminal, large departure board, rows of seats, one coffee kiosk, gate number signs, wide polished floor, realistic and open, suitable for forward and backward camera movement",
+    "image": "./generated_imgs/0022.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A minimalist hotel lobby, circular chandelier, reception desk at the far end, one red sofa, tall potted palm, marble floor, strong landmarks, photorealistic, minimal clutter",
+    "image": "./generated_imgs/0023.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An open underground metro concourse, central ticket barrier line, a blue route map wall, vending machines, structural columns, wide empty floor, realistic urban interior, clear geometry for revisiting",
+    "image": "./generated_imgs/0024.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A large public library atrium, central staircase, hanging wayfinding signs, one sculpture near the entrance, bookshelves at a distance, spacious and calm, clear foreground and background separation",
+    "image": "./generated_imgs/0025.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A modern art gallery room, one massive abstract painting, a white bench, polished concrete floor, high ceiling track lights, open negative space, realistic, memorable visual anchor",
+    "image": "./generated_imgs/0026.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An empty convention center hall, numbered hanging banners, movable partition walls, one registration desk, wide carpeted floor, clear navigation landmarks, spacious composition",
+    "image": "./generated_imgs/0027.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A broad shopping mall atrium before opening, glass elevator, central planter with tree, escalators on one side, glossy tiles, spacious and realistic, easy spatial orientation",
+    "image": "./generated_imgs/0028.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A quiet train station interior, central analog clock, ticket windows, blue platform sign, long waiting benches, open circulation area, cinematic realism, distinct landmarks",
+    "image": "./generated_imgs/0029.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A large indoor swimming pool hall, lane markers, lifeguard chair, orange safety float, skylight reflections, clean spacious composition, realistic architecture, visual reference points",
+    "image": "./generated_imgs/0030.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A broad sandy beach at low tide, one red lifeguard tower, driftwood log, distant pier, gentle footprints in sand, open horizon, photorealistic, clear memory anchors",
+    "image": "./generated_imgs/0031.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A high mountain meadow, one weathered wooden cabin, a lone pine tree, stone trail markers, wide grassland under clear sky, open natural realism, navigable scene",
+    "image": "./generated_imgs/0032.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A calm salt flat with shallow water reflections, one isolated signpost, distant abandoned truck, huge sky, minimal but readable landmarks, cinematic realism",
+    "image": "./generated_imgs/0033.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An open tundra plain, a research tent, flag markers, one satellite dish, snow patches, long sightlines, realistic cold atmosphere, stable geometry",
+    "image": "./generated_imgs/0034.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A spacious desert basin, one rock arch, a dead tree stump, a rusted water tank, long shadows, photorealistic and uncluttered, strong visual anchors",
+    "image": "./generated_imgs/0035.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A serene lakeside clearing, small dock, overturned rowboat, one lantern post, mountain reflections, open natural layout, realistic, suitable for revisit comparison",
+    "image": "./generated_imgs/0036.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A wide sunflower field with a dirt path, one scarecrow, a small windmill, distant barn, bright daylight, clear navigation anchors, spacious composition",
+    "image": "./generated_imgs/0037.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A broad snowy field, one red cabin, telephone poles receding into distance, a fence corner, pale winter sky, spacious realistic scene, distinct environmental identity",
+    "image": "./generated_imgs/0038.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A coastal cliff plateau, one stone trig point, a wooden bench, a warning sign, narrow trail to the edge, expansive sea view, photorealistic, easy-to-recognize landmarks",
+    "image": "./generated_imgs/0039.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A quiet autumn orchard, a lone ladder against a tree, stacked crates, a white shed, open rows of trees, soft realistic light, readable layout",
+    "image": "./generated_imgs/0040.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A large marshland boardwalk area, one observation tower, railings, a directional map panel, open water channels, overcast realism, strong revisit cues",
+    "image": "./generated_imgs/0041.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A broad canyon overlook, one coin-operated binocular viewer, stone barrier wall, a trail marker post, open dramatic geology, realistic cinematic look, long sightlines",
+    "image": "./generated_imgs/0042.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A grassy hilltop with ancient standing stones, one wooden sign, winding footpath, open moorland, naturalistic lighting, spacious composition, strong landmarks",
+    "image": "./generated_imgs/0043.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A calm river bend floodplain, one fishing hut, a moored boat, reed clusters, long open shore, photorealistic and quiet, clear spatial references",
+    "image": "./generated_imgs/0044.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A volcanic plain with black sand, one research rover, orange marker flags, a basalt outcrop, cloudy dramatic sky, spacious realism, high scene readability",
+    "image": "./generated_imgs/0045.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A vast futuristic transit plaza, glowing circular portal structure, holographic sign to the left, sleek monorail track overhead, reflective ground, open sci-fi architecture, clear landmarks",
+    "image": "./generated_imgs/0046.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An empty cyberpunk rooftop courtyard, neon vending machine, giant satellite dish, safety railings, distant megacity skyline, spacious and readable layout, stylized sci-fi atmosphere",
+    "image": "./generated_imgs/0047.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A clean utopian city square, levitating sculpture, white transit pods, one digital tree planter, geometric paving, wide open composition, soft futuristic lighting, spatially memorable",
+    "image": "./generated_imgs/0048.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A vast energy facility courtyard, one plasma tower, blue light conduits, maintenance walkway, emergency beacon, open industrial sci-fi landscape, consistent geometry",
+    "image": "./generated_imgs/0056.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A submerged underwater research dome plaza, panoramic glass walls, one docking hatch, kelp outside, robotic maintenance arm, spacious futuristic underwater scene, recognizable anchors",
+    "image": "./generated_imgs/0057.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An abandoned high-tech expo hall, one giant android statue, flickering ad screens, moving walkway, broad open floor, moody sci-fi emptiness, easy revisit reference points",
+    "image": "./generated_imgs/0058.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A ringworld agricultural sector, one irrigation tower, long crop rows, transport track, artificial sky overhead, broad and navigable futuristic scene, strong spatial layout",
+    "image": "./generated_imgs/0059.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A crystalline alien city court, one tall prism monument, glowing pathways, circular gate, sparse luminous trees, open and dreamlike sci-fi geometry, clear visual anchors",
+    "image": "./generated_imgs/0060.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A liminal digital lobby, central glowing cube, floating direction arrows, reflective black floor, pale infinite walls, sparse and spatially clear virtual environment",
+    "image": "./generated_imgs/0061.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An empty simulation chamber, white grid floor, one red chair, a freestanding staircase, floating frame portal, open abstract virtual space, memorable landmarks",
+    "image": "./generated_imgs/0062.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A surreal browser-like landscape, giant search bar monument, floating tabs, one blinking cursor obelisk, vast white plane, minimal digital dreamscape, easy orientation",
+    "image": "./generated_imgs/0063.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A vaporwave plaza, pink sun on horizon, checkerboard floor, one marble bust pedestal, palm trees in symmetric rows, open nostalgic virtual scene, strong visual anchors",
+    "image": "./generated_imgs/0064.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An endless blue data archive hall, one glowing server monolith, numeric signs, moving light strips, broad open aisles, clean sci-fi virtual aesthetic, navigable structure",
+    "image": "./generated_imgs/0065.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A polygonal sandbox desert, one green low-poly tree, a purple cube house, signpost arrows, empty terrain, readable stylized virtual world, minimal clutter",
+    "image": "./generated_imgs/0066.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A dreamlike operating system desktop world, giant folder icons as buildings, one trash bin monument, cursor trail in the sky, open whimsical digital landscape, memory-friendly markers",
+    "image": "./generated_imgs/0067.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A monochrome memory palace corridor plaza, one grand clock, numbered doors, isolated bench, high contrast shadows, spacious conceptual environment, revisit-oriented composition",
+    "image": "./generated_imgs/0068.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An abstract color field room, one yellow sphere, one blue arch, one striped pillar, matte floor, huge negative space, minimal landmark-based composition",
+    "image": "./generated_imgs/0069.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A recursive virtual museum, central staircase loop, suspended frames, glowing waypoint marker, polished floor, open and uncanny digital architecture, clear spatial identity",
+    "image": "./generated_imgs/0070.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A giant empty room under open sky, one floating door, a stone fountain, a single cypress tree, tiled floor extending endlessly, surreal but spacious, recognizable anchors",
+    "image": "./generated_imgs/0071.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A dream desert with a full-size grand piano, one streetlamp, a rectangular pool of water, distant staircase to nowhere, open surreal composition, strong revisit points",
+    "image": "./generated_imgs/0072.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A broad grass plain with oversized household objects, one giant chair, one standing mirror, a mailbox, long shadows, whimsical surreal realism, readable scene layout",
+    "image": "./generated_imgs/0073.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A silent plaza covered in shallow water, one chapel facade, suspended lanterns, a black boat, wide reflections, cinematic surreal atmosphere, clear landmarks",
+    "image": "./generated_imgs/0074.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A moonlit courtyard inside a forest, one marble statue, circular labyrinth lines on the ground, a glowing gate, open magical surreal scene, strong orientation cues",
+    "image": "./generated_imgs/0075.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A spacious abandoned theater stage extending into sand dunes, one red curtain fragment, spotlight stand, broken archway, surreal and readable, long sightlines",
+    "image": "./generated_imgs/0076.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An impossible staircase garden, one central fountain, trimmed hedges, a lone stone bench, pale sky, Escher-inspired but open and navigable, distinct memory anchors",
+    "image": "./generated_imgs/0077.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A dreamlike airport runway in the clouds, one boarding gate frame, baggage carousel outdoors, signal lights, expansive sky emptiness, surreal open layout",
+    "image": "./generated_imgs/0078.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A vast library field, bookshelves arranged like crop rows, one reading lamp, a ladder, distant clock tower, surreal open intellectual landscape, clear visual reference points",
+    "image": "./generated_imgs/0079.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A snowy ballroom without walls, one chandelier hanging in the air, a grand piano, mirrored floor, open horizon, elegant surreal emptiness, strong landmarks",
+    "image": "./generated_imgs/0080.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A Ghibli-inspired open train stop in the countryside, one wooden bench, timetable board, red mailbox, distant hill, airy and peaceful animated style, spatially clear",
+    "image": "./generated_imgs/0081.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A cel-shaded futuristic plaza, one hologram tree, vending machine, hovering tram sign, wide clean paving, bold readable landmarks, stylized animation look",
+    "image": "./generated_imgs/0082.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A watercolor seaside square, one lighthouse, striped parasol stand, cobblestone path, gentle pastel palette, spacious and charming illustration style, easy orientation",
+    "image": "./generated_imgs/0083.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A stylized desert caravan rest area, one cloth tent, blue water barrel, windmill, open sand, warm hand-painted fantasy look, strong visual anchors",
+    "image": "./generated_imgs/0084.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A quiet anime school courtyard, central clock pole, shoe lockers by the side, one cherry tree, wide concrete ground, soft afternoon light, memorable layout",
+    "image": "./generated_imgs/0085.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A storybook castle courtyard, one well, banners, stone arch gate, trimmed topiary, spacious whimsical illustration style, readable structure",
+    "image": "./generated_imgs/0086.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A low-poly fantasy harbor, one crane, stacked crates, a moored boat, lighthouse at a distance, open and navigable stylized environment, distinct landmarks",
+    "image": "./generated_imgs/0087.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A painterly winter village square, one glowing lamppost, frozen fountain, sled, chapel door, broad snow-covered ground, cozy but spacious, memory revisit friendly",
+    "image": "./generated_imgs/0088.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A comic-book rooftop battleground, one water tower, neon sign, ventilation fans, safety ladder, open roof surface, bold graphic shadows, strong reference points",
+    "image": "./generated_imgs/0089.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A soft pastel dream park, one carousel, a swan boat dock, striped kiosk, winding path, open lawns, cute stylized atmosphere, easy-to-recognize anchors",
+    "image": "./generated_imgs/0090.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A 1970s motel courtyard, one ice machine, turquoise pool, retro sign, striped deck chairs, broad concrete layout, nostalgic cinematic realism, clear visual markers",
+    "image": "./generated_imgs/0091.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A quiet mid-century gas station forecourt, one analog fuel pump island, roadside sign, service garage door, open asphalt, warm retro lighting, readable environment",
+    "image": "./generated_imgs/0092.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An old railway platform in fog, one green bench, station clock, luggage cart, lamppost row, wide empty space, historical atmosphere, distinct landmark spacing",
+    "image": "./generated_imgs/0093.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A Roman forum-inspired open plaza, one broken column cluster, statue pedestal, fountain basin, broad stone paving, spacious archaeological scene, strong spatial memory cues",
+    "image": "./generated_imgs/0094.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A minimalist samurai-era courtyard, one stone lantern, wooden gate, raked gravel, pine tree, open meditative composition, stable geometry",
+    "image": "./generated_imgs/0095.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A Soviet-era civic square, one monumental statue, red banner pole, concrete steps, bus stop shelter, wide austere emptiness, cinematic realism, recognizable anchors",
+    "image": "./generated_imgs/0096.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A colonial fort courtyard, one cannon, central flagpole, stone well, arched barracks, open hot sunlight, readable historical layout, easy revisit comparison",
+    "image": "./generated_imgs/0097.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A 1990s shopping mall parking lot, one shopping cart corral, tall neon sign, storefront facade, few light poles, broad nostalgic suburban space, strong orientation",
+    "image": "./generated_imgs/0098.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An Art Deco hotel terrace, one striped awning, round tables, central fountain, geometric tiled floor, ocean beyond, elegant open composition, memorable landmarks",
+    "image": "./generated_imgs/0099.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A deserted old fairground, one Ferris wheel, ticket booth, string lights, wide dusty path, nostalgic eerie openness, cinematic mood, clear visual anchors",
+    "image": "./generated_imgs/0100.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A spacious modern art museum atrium, ultra-realistic architectural photography, wide-angle view, polished concrete floor, tall skylight, white walls, a bright red suspended sculpture in the center, a long wooden bench on the left, a black information kiosk near the entrance, a staircase with glass railing at the far right, sparse visitors, strong natural daylight, clean composition, clear visual landmarks for revisiting, cinematic perspective",
+    "image": "./generated_imgs/0101.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An empty desert roadside gas station at golden hour, realistic cinematic scene, vast open space, flat asphalt forecourt, a faded turquoise gas pump island, a lone telephone booth, a giant retro signboard, distant mountains on the horizon, an old white pickup truck parked near the convenience store, long shadows, warm light, highly readable landmarks, wide framing, memory-friendly environment",
+    "image": "./generated_imgs/0102.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A quiet futuristic transit hub, sci-fi concept art, expansive interior with glossy floors, towering curved ceiling, a glowing blue holographic pillar in the middle, a row of white waiting pods along one side, a suspended digital timetable, a single maglev platform edge with yellow safety line, minimal crowd, cool ambient lighting, spacious layout, distinct reference objects for moving away and returning",
+    "image": "./generated_imgs/0103.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A serene Japanese zen garden courtyard, photorealistic, broad open gravel ground with carefully raked patterns, a large flat stone in the center, a red maple tree near one corner, a small stone lantern beside a moss patch, a wooden veranda running along one side, low surrounding walls, soft morning light, calm and spacious composition, clear memorable landmarks",
+    "image": "./generated_imgs/0104.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A surreal dreamlike library plaza, fantasy illustration, enormous open hall with floating bookshelves high above, a giant antique clock standing alone in the center, a circular mosaic on the floor, a glowing doorway in the distance, a bronze reading lamp on a solitary desk, tall arched windows with moonlight streaming in, mostly empty, spacious and atmospheric, strong navigational markers",
+    "image": "./generated_imgs/0105.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "A Nordic coastal cabin clearing, realistic landscape photography, wide grassy open area facing the sea, a small black wooden cabin with warm window light, a solitary windswept pine tree, a stone fire pit, a red canoe resting upside down, a narrow path leading to a simple wooden dock, overcast sky, minimal and spacious scene, easy-to-recognize landmarks for revisit shots",
+    "image": "./generated_imgs/0106.png"
+  },
+  {
+    "pose_json_path": "trajectories/trajectory_WSLRRLL_30s.json",
+    "prompt": "An abandoned industrial warehouse interior, gritty cinematic realism, large empty floor space, a yellow forklift near a rusted support column, a stack of blue metal barrels on one side, a hanging broken clock, sunlight beams entering through high cracked windows, a red rolling ladder by the back wall, dusty atmosphere, wide shot, sparse but memorable objects for spatial reference",
+    "image": "./generated_imgs/0107.png"
+  }
+]
